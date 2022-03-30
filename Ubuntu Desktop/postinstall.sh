@@ -74,6 +74,10 @@ else
 
 	sssd_config="[sssd]\nservices = nss, pam, autofs\nconfig_file_version = 2\ndomains = $domain\n\n[domain/$domain]\nldap_tls_cert = /var/ldap/cert.crt\nldap_tls_key = /var/ldap/priv.key\nldap_tls_reqcert = never\nldap_uri = ldaps://ldap.google.com\nldap_search_base = $dn\nid_provider = ldap\nauth_provider = ldap\nldap_schema = rfc2307bis\nldap_user_uuid = entryUUID\nldap_groups_use_matching_rule_in_chain = true\nldap_initgroups_use_matching_rule_in_chain = true\ncreate_homedir = True\nauto_private_groups = true\n\n[pam]\noffline_credentials_expiration = 2\noffline_failed_login_attempts = 3\noffline_failed_login_delay = 5\n"
 
+	ethernet_iface="$(ls /sys/class/net | grep en)"
+	printf "network:\n  version: 2\n  ethernets:\n    %s:\n      dhcp4: no\n      addresses: [%s/%s]\n      gateway4: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ipAddress $ipMask $ipGateway $ipDNS > /etc/netplan/nttek-netplan.yaml
+	netplan apply
+
 	apt -y --force-yes install sssd sssd-ldap ldap-utils openssh-server
 	mkdir /var/ldap
 	cp $certPath /var/ldap/cert.crt
@@ -84,9 +88,5 @@ else
 	service sssd start
 	pam-auth-update --enable mkhomedir --enable sssdauth --enable sssd --updateall
 	service sssd restart
-
-	ethernet_iface="$(ls /sys/class/net | grep en)"
-	printf "network:\n  version: 2\n  ethernets:\n    %s:\n      dhcp4: no\n      addresses: [%s/%s]\n      gateway4: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ipAddress $ipMask $ipGateway $ipDNS > /etc/netplan/nttek-netplan.yaml
-	netplan apply
 	shutdown -r now
 fi
