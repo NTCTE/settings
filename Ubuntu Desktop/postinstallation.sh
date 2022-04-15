@@ -1,6 +1,10 @@
 echo "Install some required packages..."
 apt install -y software-properties-common apt-transport-https ca-certificates curl wget git mysql-client
 
+echo "Installing GRUB Customizer..."
+apt update
+apt -y install grub-customizer
+
 echo "Install Google Chrome (stable)..."
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 dpkg -i --force-depends google-chrome-stable_current_amd64.deb
@@ -24,7 +28,7 @@ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu fo
 apt update
 apt install docker-ce
 
-echo "Installing InkScape (stable v1.1.2)"
+echo "Installing InkScape (stable v1.1.2)..."
 add-apt-repository ppa:inkscape.dev/stable
 apt update
 apt install inkscape
