@@ -58,9 +58,10 @@ else
 	ethernet_iface="$(ls /sys/class/net | grep en)"
 	printf "network:\n  version: 2\n  renderer: NetworkManager\n  ethernets:\n    %s:\n      wakeonlan: true\n      dhcp4: no\n      addresses: [%s/%s]\n      gateway4: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ipAddress $ipMask $ipGateway $ipDNS > /etc/netplan/nttek-netplan.yaml
 	netplan apply
-  ethernet_mac="$(cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address)"
-  printf "network:\n  version: 2\n  renderer: NetworkManager\n  ethernets:\n    %s:\n      match:\n        macaddress: %s\n      wakeonlan: true\n      dhcp4: no\n      addresses: [%s/%s]\n      gateway4: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ethernet_mac $ipAddress $ipMask $ipGateway $ipDNS > /etc/netplan/nttek-netplan.yaml
-  netplan apply
+ 	sleep 2
+	ethernet_mac="$(ip link show | awk '/link\/ether/ {print $2}')"
+	printf "network:\n  version: 2\n  renderer: NetworkManager\n  ethernets:\n    %s:\n      match:\n        macaddress: %s\n      wakeonlan: true\n      dhcp4: no\n      addresses: [%s/%s]\n      gateway4: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ethernet_mac $ipAddress $ipMask $ipGateway $ipDNS > /etc/netplan/nttek-netplan.yaml
+ 	netplan apply
 
 	apt -y --force-yes install sssd sssd-ldap ldap-utils openssh-server
 
