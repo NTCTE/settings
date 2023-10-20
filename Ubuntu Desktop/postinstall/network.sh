@@ -63,7 +63,7 @@ else
 	printf "network:\n  version: 2\n  renderer: NetworkManager\n  ethernets:\n    %s:\n      match:\n        macaddress: %s\n      wakeonlan: true\n      dhcp4: no\n      addresses: [%s/%s]\n      gateway4: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ethernet_mac $ipAddress $ipMask $ipGateway $ipDNS > /etc/netplan/nttek-netplan.yaml
  	netplan apply
 
-	apt -y --force-yes install sssd sssd-ldap ldap-utils openssh-server
+	apt -y install sssd sssd-ldap ldap-utils openssh-server
 
   echo -e "Now run sssd.sh file."
 fi
