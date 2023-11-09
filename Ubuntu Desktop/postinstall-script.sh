@@ -161,4 +161,8 @@ else
 
     echo "$(makeHeading 'Now change password for user Administrator')"
     passwd administrator
+
+    echo "SUCCESS! After 10 seconds this machine will be restarted."
+    sleep 10
+    reboot
 fi
