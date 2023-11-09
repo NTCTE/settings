@@ -61,19 +61,19 @@ else
     then
         ipMask="16"
     fi
-    if [-z "$ipDNS" ]
+    if [ -z "$ipDNS" ]
     then
         ipDNS="10.100.1.101"
     fi
     if [ -z "$ipGateway" ]
     then
-        idGateway="10.100.0.1"
+        ipGateway="10.100.0.1"
     fi
     if [ -z "$domain" ]
     then
         domain="nttek.ru"
     fi
-    if [-z "$dn"]
+    if [ -z "$dn" ]
     then
         dn="dc=nttek,dc=ru"
     fi
