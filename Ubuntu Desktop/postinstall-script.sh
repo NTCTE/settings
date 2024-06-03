@@ -113,7 +113,13 @@ else
     update-rc.d nttek-setup.bash defaults
 
     echo "$(makeHeading 'Installing some applications...')"
-    apt install -y software-properties-common apt-transport-https ca-certificates curl wget git mysql-client php-bcmath php-curl php-json php-mbstring php-mysql php-tokenizer php-xml php-zip php-cli sqlite3 php-sqlite3 unzip
+    apt install -y software-properties-common apt-transport-https ca-certificates curl wget git unzip mysql-server sqlite3 openssl
+
+    echo "$(makeHeading 'Install latest PHP and some dependencies')"
+    add-apt-repository -y ppa:ondrej/php
+    apt update
+    apt install -y php8.3-{common,cli,bcmath,curl,mbstring,mysql,tokenizer,xml,zip,sqlite3}
+    curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php && sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
 
     echo "$(makeHeading 'Installing GRUB Customizer...')"
     add-apt-repository -y ppa:danielrichter2007/grub-customizer
