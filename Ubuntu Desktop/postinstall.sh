@@ -90,25 +90,30 @@ else
     sleep 3
 
     ethernet_mac="$(ip link show | awk '/link\/ether/ {print $2}')"
-    printf "network:\n  version: 2\n  renderer: NetworkManager\n  ethernets:\n    %s:\n      match:\n        macaddress: %s\n      wakeonlan: true\n      dhcp4: no\n      addresses: [%s/%s]\n      routes:\n        - to: default\n          via: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ethernet_mac $ipAddress $ipMask $ipGateway $ipAddress > /etc/netplan/nttek-netplan.yaml
+    printf "network:\n  version: 2\n  renderer: NetworkManager\n  ethernets:\n    %s:\n      match:\n        macaddress: %s\n      wakeonlan: true\n      dhcp4: no\n      addresses: [%s/%s]\n      routes:\n        - to: default\n          via: %s\n      nameservers:\n        addresses: [%s]\n" $ethernet_iface $ethernet_mac $ipAddress $ipMask $ipGateway $ipDNS > /etc/netplan/nttek-netplan.yaml
     netplan apply
     sleep 2
 
-    echo "$(makeHeading 'Configure SSSD settings...')"
+    echo "$(makeHeading 'Configure SSSD and NFS settings...')"
 
-    sssd_config="[sssd]\nservices = nss, pam, autofs\nconfig_file_version = 2\ndomains = $domain\n\n[domain/$domain]\nldap_tls_cert = /var/ldap/cert.crt\nldap_tls_key = /var/ldap/priv.key\nldap_tls_reqcert = never\nldap_uri = ldaps://ldap.google.com\nldap_search_base = $dn\nid_provider = ldap\nauth_provider = ldap\nldap_schema = rfc2307bis\nldap_user_uuid = entryUUID\nldap_groups_use_matching_rule_in_chain = false\nldap_initgroups_use_matching_rule_in_chain = false\ncreate_homedir = True\nauto_private_groups = true\nldap_referrals = false\n\n[pam]\noffline_credentials_expiration = 2\noffline_failed_login_attempts = 3\noffline_failed_login_delay = 5\ncache_credentials = true\nentry_cache_timeout = 604800\n"
+    sssd_config="[sssd]\nservices = nss, pam, autofs\nconfig_file_version = 2\ndomains = $domain,files\n\n[domain/$domain]\ndefault_shell = /bin/bash\nkrb5_store_password_if_offline = True\ncache_credentials = True\naccount_cache_expiration = 90\nkrb5_realm = $domain\nid_provider = ldap\nauth_provider = ldap\nfallback_homedir = /nfs/home/%u\noverride_homedir = /nfs/home/%u\nldap_tls_cert = /var/ldap/cert.crt\nldap_tls_key = /var/ldap/priv.key\nldap_tls_reqcert = never\nldap_uri = ldaps://ldap.google.com\nldap_search_base = $dn\nldap_schema = rfc2307bis\nldap_user_uuid = entryUUID\nauto_private_groups = true\nldap_referrals = false\n\n[domain/files]\nid_provider = files\n\n[pam]\noffline_credentials_expiration = 87"
     apt update
-    apt install -y sssd sssd-ldap ldap-utils openssh-server
+    apt install -y sssd sssd-ldap ldap-utils openssh-server nfs-common
+    mkdir -p /nfs/home
     mkdir /var/ldap
+
+    mount 10.100.1.101:/storage/nfs-home /nfs/home
+    echo "10.100.1.101:/storage/nfs-home  /nfs/home       nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0" >> /etc/fstab
+
     cp $certPath /var/ldap/cert.crt
     cp $keyPath /vat/ldap/priv.key
     echo -e $sssd_config > /etc/sssd/sssd.conf
     chown -R root:root /var/ldap /etc/sssd/sssd.conf
     chmod -R 600 /var/ldap /etc/sssd/sssd.conf
-    service sssd startstman (vi
+    service sssd start
     echo "$(makeHeading 'Configure autoload script...')"
 
-    printf "#!/bin/bash\n\n### BEGIN INIT INFO\n# Provides:		nttek-setup.bash\n# Required-Start:	$sssd\n# Required-Stop:\n# Default-Start:	2 3 4 5\n# Default-Stop:		0 1 6\n# Short-Description:	This script provide some important fixes for Ubuntu Desktop.\n# Description:		This script will run after the sssd daemon starts.\n### END INIT INFO\n\nchgrp 1226889777 /var/run/docker.sock\n\nexit 0" > /etc/init.d/nttek-setup.bash
+    printf "#!/bin/bash\n\n### BEGIN INIT INFO\n# Provides:		nttek-setup.bash\n# Required-Start:	sssd\n# Required-Stop:\n# Default-Start:	2 3 4 5\n# Default-Stop:		0 1 6\n# Short-Description:	This script provide some important fixes for Ubuntu Desktop.\n# Description:		This script will run after the sssd daemon starts.\n### END INIT INFO\n\nchgrp 1226889777 /var/run/docker.sock\n\nexit 0" > /etc/init.d/nttek-setup.bash
     chmod +x /etc/init.d/nttek-setup.bash
     update-rc.d nttek-setup.bash defaults
 
