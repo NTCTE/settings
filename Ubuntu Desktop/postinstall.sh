@@ -106,7 +106,7 @@ else
     echo "10.100.1.101:/storage/nfs-home  /nfs/home       nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0" >> /etc/fstab
 
     cp $certPath /var/ldap/cert.crt
-    cp $keyPath /vat/ldap/priv.key
+    cp $keyPath /var/ldap/priv.key
     echo -e $sssd_config > /etc/sssd/sssd.conf
     chown -R root:root /var/ldap /etc/sssd/sssd.conf
     chmod -R 600 /var/ldap /etc/sssd/sssd.conf
